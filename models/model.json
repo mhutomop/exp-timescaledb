@@ -1,0 +1,14 @@
+{
+  "name": "default",
+  "rdbms": "postgresql",
+  "host": "127.0.0.1",
+  "port": 5432,
+  "dbname": "cms_simulator_db",
+  "user": "postgres",
+  "password": "postgres",
+  "tables": [
+      "logs",
+      "sessions",
+      "simulators"
+  ]
+}
