@@ -23,19 +23,24 @@ ADD CONSTRAINT fk_simulator_id
 FOREIGN KEY (simulator_id)
 REFERENCES simulators(id);
 
+INSERT INTO "simulators" (id, name) VALUES (1, 'OSTK-sim'), (2, 'OS-attitude-sim'), (3, 'EO-Sim'), (1000, 'Radar-Sim');
+
 --  Get session by date
-SELECT DATE(time), session_id,
-    MIN(strftime('%H:%M:%f', time)) as start_time,
-    MAX(strftime('%H:%M:%f', time)) as end_time 
-FROM movement_history 
-WHERE DATE(time)='2025-06-25' GROUP BY session_id;
+SELECT 
+    DATE(time) AS date_only,
+    session_id,
+    MIN(time) AS start_time,
+    MAX(time) AS end_time
+FROM movement_history
+WHERE DATE(time) = '2025-07-15'
+GROUP BY DATE(time), session_id;
 
 --  Get object ID by date and session
 SELECT object_id FROM movement_history WHERE session_id = 2 GROUP BY object_id;
 
 -- Get movement history data by date, session, object ID, and start-end time
 SELECT  time, simulator_id, object_id, latitude_bearing , longitude_range  
-FROM object_movement_history 
+FROM movement_history 
 WHERE object_id = 2 and session_id = 2 
-	and strftime('%H:%M:%f', time) BETWEEN '08:29:00' and '08:45:00'
+	and time BETWEEN '2025-07-15 08:29:00+07' and '2025-07-15 11:45:00+07'
 ORDER BY simulator_id;

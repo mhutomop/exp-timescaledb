@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
             log_data.emplace_back(LogDataStored{
                 .time = ServerUtil::get_iso_string_in_ms(ServerUtil::get_timestamp_in_ms()),
                 .session_id = 0,
-                .simulator_id = 0,
+                .simulator_id = 1,
                 .object_id = i,
                 .latitude_bearing = -6.0,
                 .longitude_range = 100.0

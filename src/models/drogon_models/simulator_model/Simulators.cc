@@ -15,15 +15,13 @@ using namespace drogon_model::cms_simulator_db;
 
 const std::string Simulators::Cols::_id = "\"id\"";
 const std::string Simulators::Cols::_name = "\"name\"";
-const std::string Simulators::Cols::_created_at = "\"created_at\"";
 const std::string Simulators::primaryKeyName = "id";
 const bool Simulators::hasPrimaryKey = true;
 const std::string Simulators::tableName = "\"simulators\"";
 
 const std::vector<typename Simulators::MetaData> Simulators::metaData_={
 {"id","int32_t","integer",4,1,1,1},
-{"name","std::string","character varying",50,0,0,1},
-{"created_at","::trantor::Date","timestamp with time zone",0,0,0,0}
+{"name","std::string","character varying",50,0,0,1}
 };
 const std::string &Simulators::getColumnName(size_t index) noexcept(false)
 {
@@ -42,33 +40,11 @@ Simulators::Simulators(const Row &r, const ssize_t indexOffset) noexcept
         {
             name_=std::make_shared<std::string>(r["name"].as<std::string>());
         }
-        if(!r["created_at"].isNull())
-        {
-            auto timeStr = r["created_at"].as<std::string>();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
-        }
     }
     else
     {
         size_t offset = (size_t)indexOffset;
-        if(offset + 3 > r.size())
+        if(offset + 2 > r.size())
         {
             LOG_FATAL << "Invalid SQL result for this model";
             return;
@@ -84,36 +60,13 @@ Simulators::Simulators(const Row &r, const ssize_t indexOffset) noexcept
         {
             name_=std::make_shared<std::string>(r[index].as<std::string>());
         }
-        index = offset + 2;
-        if(!r[index].isNull())
-        {
-            auto timeStr = r[index].as<std::string>();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
-        }
     }
 
 }
 
 Simulators::Simulators(const Json::Value &pJson, const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 2)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -132,32 +85,6 @@ Simulators::Simulators(const Json::Value &pJson, const std::vector<std::string> 
         if(!pJson[pMasqueradingVector[1]].isNull())
         {
             name_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
-        }
-    }
-    if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
-    {
-        dirtyFlag_[2] = true;
-        if(!pJson[pMasqueradingVector[2]].isNull())
-        {
-            auto timeStr = pJson[pMasqueradingVector[2]].asString();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
         }
     }
 }
@@ -180,38 +107,12 @@ Simulators::Simulators(const Json::Value &pJson) noexcept(false)
             name_=std::make_shared<std::string>(pJson["name"].asString());
         }
     }
-    if(pJson.isMember("created_at"))
-    {
-        dirtyFlag_[2]=true;
-        if(!pJson["created_at"].isNull())
-        {
-            auto timeStr = pJson["created_at"].asString();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
-        }
-    }
 }
 
 void Simulators::updateByMasqueradedJson(const Json::Value &pJson,
                                             const std::vector<std::string> &pMasqueradingVector) noexcept(false)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 2)
     {
         LOG_ERROR << "Bad masquerading vector";
         return;
@@ -231,32 +132,6 @@ void Simulators::updateByMasqueradedJson(const Json::Value &pJson,
             name_=std::make_shared<std::string>(pJson[pMasqueradingVector[1]].asString());
         }
     }
-    if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
-    {
-        dirtyFlag_[2] = true;
-        if(!pJson[pMasqueradingVector[2]].isNull())
-        {
-            auto timeStr = pJson[pMasqueradingVector[2]].asString();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
-        }
-    }
 }
 
 void Simulators::updateByJson(const Json::Value &pJson) noexcept(false)
@@ -274,32 +149,6 @@ void Simulators::updateByJson(const Json::Value &pJson) noexcept(false)
         if(!pJson["name"].isNull())
         {
             name_=std::make_shared<std::string>(pJson["name"].asString());
-        }
-    }
-    if(pJson.isMember("created_at"))
-    {
-        dirtyFlag_[2] = true;
-        if(!pJson["created_at"].isNull())
-        {
-            auto timeStr = pJson["created_at"].asString();
-            struct tm stm;
-            memset(&stm,0,sizeof(stm));
-            auto p = strptime(timeStr.c_str(),"%Y-%m-%d %H:%M:%S",&stm);
-            time_t t = mktime(&stm);
-            size_t decimalNum = 0;
-            if(p)
-            {
-                if(*p=='.')
-                {
-                    std::string decimals(p+1,&timeStr[timeStr.length()]);
-                    while(decimals.length()<6)
-                    {
-                        decimals += "0";
-                    }
-                    decimalNum = (size_t)atol(decimals.c_str());
-                }
-                createdAt_=std::make_shared<::trantor::Date>(t*1000000+decimalNum);
-            }
         }
     }
 }
@@ -348,28 +197,6 @@ void Simulators::setName(std::string &&pName) noexcept
     dirtyFlag_[1] = true;
 }
 
-const ::trantor::Date &Simulators::getValueOfCreatedAt() const noexcept
-{
-    static const ::trantor::Date defaultValue = ::trantor::Date();
-    if(createdAt_)
-        return *createdAt_;
-    return defaultValue;
-}
-const std::shared_ptr<::trantor::Date> &Simulators::getCreatedAt() const noexcept
-{
-    return createdAt_;
-}
-void Simulators::setCreatedAt(const ::trantor::Date &pCreatedAt) noexcept
-{
-    createdAt_ = std::make_shared<::trantor::Date>(pCreatedAt);
-    dirtyFlag_[2] = true;
-}
-void Simulators::setCreatedAtToNull() noexcept
-{
-    createdAt_.reset();
-    dirtyFlag_[2] = true;
-}
-
 void Simulators::updateId(const uint64_t id)
 {
 }
@@ -377,8 +204,7 @@ void Simulators::updateId(const uint64_t id)
 const std::vector<std::string> &Simulators::insertColumns() noexcept
 {
     static const std::vector<std::string> inCols={
-        "name",
-        "created_at"
+        "name"
     };
     return inCols;
 }
@@ -396,17 +222,6 @@ void Simulators::outputArgs(drogon::orm::internal::SqlBinder &binder) const
             binder << nullptr;
         }
     }
-    if(dirtyFlag_[2])
-    {
-        if(getCreatedAt())
-        {
-            binder << getValueOfCreatedAt();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
 }
 
 const std::vector<std::string> Simulators::updateColumns() const
@@ -415,10 +230,6 @@ const std::vector<std::string> Simulators::updateColumns() const
     if(dirtyFlag_[1])
     {
         ret.push_back(getColumnName(1));
-    }
-    if(dirtyFlag_[2])
-    {
-        ret.push_back(getColumnName(2));
     }
     return ret;
 }
@@ -430,17 +241,6 @@ void Simulators::updateArgs(drogon::orm::internal::SqlBinder &binder) const
         if(getName())
         {
             binder << getValueOfName();
-        }
-        else
-        {
-            binder << nullptr;
-        }
-    }
-    if(dirtyFlag_[2])
-    {
-        if(getCreatedAt())
-        {
-            binder << getValueOfCreatedAt();
         }
         else
         {
@@ -467,14 +267,6 @@ Json::Value Simulators::toJson() const
     {
         ret["name"]=Json::Value();
     }
-    if(getCreatedAt())
-    {
-        ret["created_at"]=getCreatedAt()->toDbStringLocal();
-    }
-    else
-    {
-        ret["created_at"]=Json::Value();
-    }
     return ret;
 }
 
@@ -482,7 +274,7 @@ Json::Value Simulators::toMasqueradedJson(
     const std::vector<std::string> &pMasqueradingVector) const
 {
     Json::Value ret;
-    if(pMasqueradingVector.size() == 3)
+    if(pMasqueradingVector.size() == 2)
     {
         if(!pMasqueradingVector[0].empty())
         {
@@ -506,17 +298,6 @@ Json::Value Simulators::toMasqueradedJson(
                 ret[pMasqueradingVector[1]]=Json::Value();
             }
         }
-        if(!pMasqueradingVector[2].empty())
-        {
-            if(getCreatedAt())
-            {
-                ret[pMasqueradingVector[2]]=getCreatedAt()->toDbStringLocal();
-            }
-            else
-            {
-                ret[pMasqueradingVector[2]]=Json::Value();
-            }
-        }
         return ret;
     }
     LOG_ERROR << "Masquerade failed";
@@ -535,14 +316,6 @@ Json::Value Simulators::toMasqueradedJson(
     else
     {
         ret["name"]=Json::Value();
-    }
-    if(getCreatedAt())
-    {
-        ret["created_at"]=getCreatedAt()->toDbStringLocal();
-    }
-    else
-    {
-        ret["created_at"]=Json::Value();
     }
     return ret;
 }
@@ -564,18 +337,13 @@ bool Simulators::validateJsonForCreation(const Json::Value &pJson, std::string &
         err="The name column cannot be null";
         return false;
     }
-    if(pJson.isMember("created_at"))
-    {
-        if(!validJsonOfField(2, "created_at", pJson["created_at"], err, true))
-            return false;
-    }
     return true;
 }
 bool Simulators::validateMasqueradedJsonForCreation(const Json::Value &pJson,
                                                     const std::vector<std::string> &pMasqueradingVector,
                                                     std::string &err)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 2)
     {
         err = "Bad masquerading vector";
         return false;
@@ -602,14 +370,6 @@ bool Simulators::validateMasqueradedJsonForCreation(const Json::Value &pJson,
             return false;
         }
       }
-      if(!pMasqueradingVector[2].empty())
-      {
-          if(pJson.isMember(pMasqueradingVector[2]))
-          {
-              if(!validJsonOfField(2, pMasqueradingVector[2], pJson[pMasqueradingVector[2]], err, true))
-                  return false;
-          }
-      }
     }
     catch(const Json::LogicError &e)
     {
@@ -635,18 +395,13 @@ bool Simulators::validateJsonForUpdate(const Json::Value &pJson, std::string &er
         if(!validJsonOfField(1, "name", pJson["name"], err, false))
             return false;
     }
-    if(pJson.isMember("created_at"))
-    {
-        if(!validJsonOfField(2, "created_at", pJson["created_at"], err, false))
-            return false;
-    }
     return true;
 }
 bool Simulators::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
                                                   const std::vector<std::string> &pMasqueradingVector,
                                                   std::string &err)
 {
-    if(pMasqueradingVector.size() != 3)
+    if(pMasqueradingVector.size() != 2)
     {
         err = "Bad masquerading vector";
         return false;
@@ -665,11 +420,6 @@ bool Simulators::validateMasqueradedJsonForUpdate(const Json::Value &pJson,
       if(!pMasqueradingVector[1].empty() && pJson.isMember(pMasqueradingVector[1]))
       {
           if(!validJsonOfField(1, pMasqueradingVector[1], pJson[pMasqueradingVector[1]], err, false))
-              return false;
-      }
-      if(!pMasqueradingVector[2].empty() && pJson.isMember(pMasqueradingVector[2]))
-      {
-          if(!validJsonOfField(2, pMasqueradingVector[2], pJson[pMasqueradingVector[2]], err, false))
               return false;
       }
     }
@@ -724,17 +474,6 @@ bool Simulators::validJsonOfField(size_t index,
                 return false;
             }
 
-            break;
-        case 2:
-            if(pJson.isNull())
-            {
-                return true;
-            }
-            if(!pJson.isString())
-            {
-                err="Type error in the "+fieldName+" field";
-                return false;
-            }
             break;
         default:
             err="Internal error in the server";

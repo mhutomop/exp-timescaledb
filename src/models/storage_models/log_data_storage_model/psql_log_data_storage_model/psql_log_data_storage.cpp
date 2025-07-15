@@ -15,7 +15,7 @@
 
 PSQLLogDataStorage::PSQLLogDataStorage(PSQLDatabaseAdapter* database_adapter) : database_adapter_(database_adapter)
 {
-    logs_mapper_ = std::make_shared<drogon::orm::Mapper<drogon_model::cms_simulator_db::Logs>>(database_adapter_->get_db_client_());
+    movement_history_mapper_ = std::make_shared<drogon::orm::Mapper<drogon_model::cms_simulator_db::MovementHistory>>(database_adapter_->get_db_client_());
 }
 
 std::vector<LogDataStored> PSQLLogDataStorage::get_log_data
@@ -30,14 +30,14 @@ std::vector<LogDataStored> PSQLLogDataStorage::get_log_data
 
     // Build criteria
     drogon::orm::Criteria criteria = 
-        drogon::orm::Criteria(drogon_model::cms_simulator_db::Logs::Cols::_time, drogon::orm::CompareOperator::GE, startTime) &&
-        drogon::orm::Criteria(drogon_model::cms_simulator_db::Logs::Cols::_time, drogon::orm::CompareOperator::LE, endTime);
+        drogon::orm::Criteria(drogon_model::cms_simulator_db::MovementHistory::Cols::_time, drogon::orm::CompareOperator::GE, startTime) &&
+        drogon::orm::Criteria(drogon_model::cms_simulator_db::MovementHistory::Cols::_time, drogon::orm::CompareOperator::LE, endTime);
     
     std::vector<LogDataStored> log_stored;
 
     auto now = ServerUtil::get_timestamp_in_ms();
 
-    auto results = this->logs_mapper_->findBy(criteria);
+    auto results = this->movement_history_mapper_->findBy(criteria);
 
     LOG_DEBUG("Select time", std::to_string(ServerUtil::get_timestamp_in_ms() - now));
 
@@ -57,7 +57,7 @@ std::vector<LogDataStored> PSQLLogDataStorage::get_log_data
 
 void PSQLLogDataStorage::add_log_data_batch(std::vector<LogDataStored> &log_data) {
     std::ostringstream sql;
-        sql << "INSERT INTO " << "logs" << " (time, simulator_id, session_id, object_id, latitude_bearing, longitude_range) VALUES ";
+        sql << "INSERT INTO " << "movement_history" << " (time, simulator_id, session_id, object_id, latitude_bearing, longitude_range) VALUES ";
 
     std::vector<std::string> placeholders;
     std::vector<std::variant<trantor::Date, int, double>> parameters;
@@ -71,7 +71,7 @@ void PSQLLogDataStorage::add_log_data_batch(std::vector<LogDataStored> &log_data
             sql << ", ";
 
         // Append parameters safely
-        parameters.push_back(trantor::Date::fromDbStringLocal(log_data[i].time));
+        parameters.push_back(trantor::Date::fromDbString(log_data[i].time));
         parameters.push_back(log_data[i].simulator_id);
         parameters.push_back(log_data[i].session_id);
         parameters.push_back(log_data[i].object_id);
