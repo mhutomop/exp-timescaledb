@@ -25,8 +25,8 @@ std::vector<LogDataStored> PSQLLogDataStorage::get_log_data
 )
 {
     // Define time range
-    auto startTime = trantor::Date::fromDbStringLocal(std::string(start_time));
-    auto endTime = trantor::Date::fromDbStringLocal(std::string(end_time));
+    auto startTime = trantor::Date::fromDbString(std::string(start_time));
+    auto endTime = trantor::Date::fromDbString(std::string(end_time));
 
     // Build criteria
     drogon::orm::Criteria criteria = 
