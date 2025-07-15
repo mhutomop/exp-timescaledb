@@ -1,4 +1,3 @@
-
 CREATE TABLE "movement_history" (
     time timestamp with time zone default now()    not null,
     simulator_id integer                           not null,
