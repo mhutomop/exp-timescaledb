@@ -44,7 +44,7 @@ SELECT object_id FROM movement_history WHERE session_id = 2 GROUP BY object_id;
 SELECT
     mh.time,
     mh.simulator_id,
-    s.name,
+    s.name AS simulator_name,
     mh.object_id,
     mh.latitude_bearing,
     mh.longitude_range
